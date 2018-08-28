@@ -1,19 +1,19 @@
-Final Project - Save The Pups
+Dog Adoption
 ================
-Tyler Mallon, Caleb Herrera, Lynssey Brim, Thomas del Zoppo
+Tyler Mallon
 28 August, 2018
 
 ### Introduction & Background
 
-The Austin Animal Center (AAC) is the largest no-kill municipal animal shelter in the United States. They are an open-intake facility providing shelter and protection to all animals regardless of their condition upon intake. They seek not to euthanize more than 10% of the animals they receive, and usually to do so only as a means of ending suffering. The goal of the AAC is to place all animals that can be adopted into permanent homes, and most of their animals are dogs. So, the primary goal of our research is to help the AAC to better predict whether an animal can be adopted based upon an analysis of AAC data observations.
-
-When looking at Intake and Outcome data on dogs sheltered at the AAC, we hypothesize that there are statistically significant attributes of dogs and shelter conditions that will provide predictive foresight into the outcome of a dog upon leaving the shelter. In addition to adoption and euthanasia outcomes, we observe and analyze many cases where dogs are returned to their owners or transferred away to partner shelters, which may or may not be no-kill shelters. For the AAC to optimize the use of its limited resources by prolonging the sheltering of dogs most likely to be adopted (or returned) and hastening the transfer of dogs most likely to be transferred, we attempt to accurately model the attributes of dogs and shelter conditions that most likely lead to adoption. With this data driven insight, the shelter can showcase or transfer dogs accordingly to better manage their resources and maximize adoptions over time.
+The Austin Animal Center (AAC) is the largest no-kill municipal animal shelter in the United States. They are an open-intake facility providing shelter and protection to all animals regardless of their condition upon intake. They seek to only euthanize a maximum of 10% of the animals they receive, and usually do so only as a means of ending suffering. The goal of the AAC is to place all animals that can be adopted into permanent homes, and most of their animals are dogs. So, the primary goal of this research is to help the AAC to better predict whether an animal can be adopted based upon an analysis of AAC data observations. This should help the AAC better optimize the use of its limited resources by prolonging the sheltering of dogs most likely to be adopted (or returned) and hastening the transfer of dogs most likely to be transferred or euthanized.
 
 ------------------------------------------------------------------------
 
 ### EDA Overview
 
-Although there were a few other outcome types observed in the shelter population, after performing an exploratory data analysis (EDA), we decided to limit our sample set to dogs with the four most prevalent outcome types; Adoption, Euthanasia, Return to Owner, and Transfer. Out EDA confirmed several of our intuitions. First, owners prefer not to adopt dogs that still have their reproductive capabilities still intact. Second, owners prefer to adopt younger animals. Third and finally, Owners prefer to adopt animals that are in good health. Using additional insights discovered through the EDA, as well as our intuition, we narrowed down the number of variables to include in our models in order to provide greater interpretability and computational efficiency to the models. It was also necessary to transform the data types of a few of the variables for programming purposes. After doing some research on the adoption of dogs in general, we discovered a notable pattern that black colored dogs seem to be adopted less. In addition to that fact, our "color" variable had an extensive amount of choices. So, we decided to simplify the color variables as either black or not. Similar to "color," the number of "breed" choices were also very high and likewise would have been extremely complicated to analyze computationally, so we grouped all the breeds into the eight different groups that dog breeds fall into. These are broken down into seven primary categories of dogs, and one miscellaneous category for any dog that does not fall under those seven primary groupings.
+Although there were a few other outcome types observed in the shelter population, after performing an exploratory data analysis (EDA), I decided to limit the sample set to dogs with the four most prevalent outcome types; Adoption, Euthanasia, Return to Owner, and Transfer. The EDA confirmed several of my initial intuitions. First, owners prefer not to adopt dogs that still have their reproductive capabilities still intact. Second, owners prefer to adopt younger animals. Third and finally, Owners prefer to adopt animals that are in good health.
+
+I also discovered that it was going to be necessary to simplify several of the features due to the number of distinct values that they contained. Both color and dog breed contained over 300 distinct values, which would be computationally very expensive. After doing some research on the adoption of dogs in general, I discovered that there is a prevailing theory that black colored dogs seem to be adopted less. So, I decided to simplify the color variable as either black or not. Similar to "color," I reduced the number of possible breed values by grouping all the breeds into the eight different groups as defined by the AKC [here](https://www.akc.org/public-education/resources/general-tips-information/dog-breeds-sorted-groups/). These are broken down into seven primary categories of dogs, and one miscellaneous category for any dog that does not fall under those seven primary groupings.
 
 #### EDA Process - Variable Exploration
 
@@ -286,47 +286,47 @@ After optimizing our KNN modeling, we developed a few Random Forest models in an
     ## 
     ##                  Reference
     ## Prediction        Adoption Euthanasia Return to Owner Transfer
-    ##   Adoption            5988        107             373     1002
-    ##   Euthanasia             1        200               3        3
-    ##   Return to Owner       80         46            3520      110
-    ##   Transfer             105         97              85     1794
+    ##   Adoption            5951        104             348      988
+    ##   Euthanasia             0        199               5        2
+    ##   Return to Owner       85         64            3541      114
+    ##   Transfer             138         83              87     1805
     ## 
     ## Overall Statistics
-    ##                                          
-    ##                Accuracy : 0.8511         
-    ##                  95% CI : (0.845, 0.8571)
-    ##     No Information Rate : 0.4569         
-    ##     P-Value [Acc > NIR] : < 2.2e-16      
-    ##                                          
-    ##                   Kappa : 0.7644         
-    ##  Mcnemar's Test P-Value : < 2.2e-16      
+    ##                                           
+    ##                Accuracy : 0.8507          
+    ##                  95% CI : (0.8446, 0.8566)
+    ##     No Information Rate : 0.4569          
+    ##     P-Value [Acc > NIR] : < 2.2e-16       
+    ##                                           
+    ##                   Kappa : 0.7641          
+    ##  Mcnemar's Test P-Value : < 2.2e-16       
     ## 
     ## Statistics by Class:
     ## 
     ##                      Class: Adoption Class: Euthanasia
-    ## Sensitivity                   0.9699           0.44444
-    ## Specificity                   0.7981           0.99946
-    ## Pos Pred Value                0.8016           0.96618
-    ## Neg Pred Value                0.9692           0.98121
-    ## Precision                     0.8016           0.96618
-    ## Recall                        0.9699           0.44444
-    ## F1                            0.8777           0.60883
+    ## Sensitivity                   0.9639           0.44222
+    ## Specificity                   0.8038           0.99946
+    ## Pos Pred Value                0.8052           0.96602
+    ## Neg Pred Value                0.9636           0.98114
+    ## Precision                     0.8052           0.96602
+    ## Recall                        0.9639           0.44222
+    ## F1                            0.8774           0.60671
     ## Prevalence                    0.4569           0.03330
-    ## Detection Rate                0.4431           0.01480
-    ## Detection Prevalence          0.5528           0.01532
-    ## Balanced Accuracy             0.8840           0.72195
+    ## Detection Rate                0.4404           0.01473
+    ## Detection Prevalence          0.5469           0.01524
+    ## Balanced Accuracy             0.8838           0.72084
     ##                      Class: Return to Owner Class: Transfer
-    ## Sensitivity                          0.8842          0.6167
-    ## Specificity                          0.9752          0.9729
-    ## Pos Pred Value                       0.9372          0.8621
-    ## Neg Pred Value                       0.9528          0.9025
-    ## Precision                            0.9372          0.8621
-    ## Recall                               0.8842          0.6167
-    ## F1                                   0.9099          0.7190
+    ## Sensitivity                          0.8895          0.6205
+    ## Specificity                          0.9724          0.9710
+    ## Pos Pred Value                       0.9309          0.8542
+    ## Neg Pred Value                       0.9547          0.9032
+    ## Precision                            0.9309          0.8542
+    ## Recall                               0.8895          0.6205
+    ## F1                                   0.9097          0.7188
     ## Prevalence                           0.2946          0.2153
-    ## Detection Rate                       0.2605          0.1328
-    ## Detection Prevalence                 0.2779          0.1540
-    ## Balanced Accuracy                    0.9297          0.7948
+    ## Detection Rate                       0.2620          0.1336
+    ## Detection Prevalence                 0.2815          0.1564
+    ## Balanced Accuracy                    0.9309          0.7957
 
 #### Variable Importance
 
