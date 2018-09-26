@@ -1,7 +1,7 @@
 Dog Adoption
 ================
 Tyler Mallon
-31 August, 2018
+26 September, 2018
 
 ### Introduction & Background
 
@@ -15,7 +15,7 @@ Although there were a few other outcome types observed in the shelter population
 
 I also discovered that it was going to be necessary to simplify several of the features due to the number of distinct values that they contained. Both color and dog breed contained over 300 distinct values, which would be computationally very expensive. After doing some research on the adoption of dogs in general, I discovered that there is a prevailing theory that black colored dogs seem to be adopted less. So, I decided to simplify the color variable as either black or not. Similar to "color," I reduced the number of possible breed values by grouping all the breeds into the eight different groups as defined by the AKC [here](https://www.akc.org/public-education/resources/general-tips-information/dog-breeds-sorted-groups/). These are broken down into seven primary categories of dogs, and one miscellaneous category for any dog that does not fall under those seven primary groupings.
 
-#### EDA Process - Variable Exploration
+#### EDA Process - Initial Dataset Variables
 
 In the initial dataset, there are 10 different possible values of outcome type which are listed below:
 
@@ -140,32 +140,40 @@ In the initial dataset, there are 337 unique color combinations of dogs.
     ## 10 Gold/Gold   
     ## # ... with 327 more rows
 
-#### EDA Process - Distributional Exploration
+#### EDA Process - Initial Variable Relationhips
 
 ``` r
 data_dog <- data %>%
   filter(animal_type == "Dog")
 ```
 
-In the initial dataset, almost all the animals have only visited the shelter once. A small portion of the animals have been to the shelter twice and there are almost no animals that have been there three or more times.
+It appears that there are four primary outcomes: Adoption, Transfer, Return to Owner, and Euthanasia. I plan to limit the model predictions to only these four outcomes as there is insufficient data on the other outcomes. I'm curious now to examine the relationship the other variables have with the four largest classes of out comecome type.
 
 ![](Project_Cleaned_files/figure-markdown_github/distributional_exploration1-1.png)
 
-It appears that there are four primary outcomes: Adoption, Transfer, Return to Owner, and Euthanasia
+In the initial dataset, almost all the animals have only visited the shelter once. A small portion of the animals have been to the shelter twice and there are almost no animals that have been there three or more times.
 
 ![](Project_Cleaned_files/figure-markdown_github/distributional_exploration2-1.png)
 
-The distributions for dogs across the primary outcomes of Adoption, Return to Owner, and Transfer are fairly similar. They are all right skewed distributions and appear to reflect the overall distribution of the age of dogs within the shelter. Euthanasia, however, differs slightly and shows a distribution closer to uniform with a slight central tendency around age of year 2.
-
 ![](Project_Cleaned_files/figure-markdown_github/distributional_exploration3-1.png)
 
-As a proportion of the possible outcomes, it is clear that spayed and neutered dogs are almost all of the animals that end up getting adopted. Spayed and neutered dogs also comprise a majority of dogs that result in the Return to Owner outcome. The distribution is more even for the Euthanasia and Transfer outcomes. I also see that male dogs comprise a slightly higher proportion of euthanized dogs relative to females.
+The distributions for dogs across the primary outcomes of Adoption, Return to Owner, and Transfer are fairly similar. They are all right skewed distributions and appear to reflect the overall distribution of the age of dogs within the shelter. Euthanasia, however, differs slightly and shows a distribution closer to uniform with a slight central tendency around age of year 2.
 
 ![](Project_Cleaned_files/figure-markdown_github/distributional_exploration4-1.png)
 
-As a proportion of the possible outcomes for all adopted dogs, their intake status is almost always Normal. For euthanized dogs, intake status of Normal is still the predominant intake status. However, euthanized dogs have a much higher percentage of injured and sick dogs relative to adopted dogs. This is generally what I expect.
+As a proportion of the possible outcomes, it is clear that spayed and neutered dogs are almost all of the animals that end up getting adopted. Spayed and neutered dogs also comprise a majority of dogs that result in the Return to Owner outcome. The distribution is more even for the Euthanasia and Transfer outcomes. I also see that male dogs comprise a slightly higher proportion of euthanized dogs relative to females.
 
 ![](Project_Cleaned_files/figure-markdown_github/distributional_exploration5-1.png)
+
+As a proportion of the possible outcomes for all adopted dogs, their intake status is almost always Normal. For euthanized dogs, intake status of Normal is still the predominant intake status. However, euthanized dogs have a much higher percentage of injured and sick dogs relative to adopted dogs. This is generally what I expect.
+
+![](Project_Cleaned_files/figure-markdown_github/distributional_exploration6-1.png)
+
+The time spent in shelter for each outcome type shows that the euthanasia and return to owner outcomes are much more likely to occur within the first several days of stay than adoption and transfer outcomes. This seems to make sense, as the dogs that are euthanized are usually done so for medical reasons and a dog that is returned to its owner seems to be a result of the owner regretting their decision to give up the dog. Interestingly, dogs are most commonly adopted or transfered within two weeks of their arrival to the shelter. This provides some context on how long it usually takes for the most desirable animals to be adopted or transfered.
+
+![](Project_Cleaned_files/figure-markdown_github/distributional_exploration7-1.png)
+
+#### EDA Process - Modified Dataset Exploration
 
 ------------------------------------------------------------------------
 
@@ -291,47 +299,47 @@ After optimizing our KNN modeling, we developed a few Random Forest models in an
     ## 
     ##                  Reference
     ## Prediction        Adoption Euthanasia Return to Owner Transfer
-    ##   Adoption            5977        101             373     1012
-    ##   Euthanasia             1        191               3        6
-    ##   Return to Owner       79         56            3505      109
-    ##   Transfer             117        102             100     1782
+    ##   Adoption            5974         96             365     1020
+    ##   Euthanasia             0        208               2        3
+    ##   Return to Owner       82         53            3523      108
+    ##   Transfer             118         93              91     1778
     ## 
     ## Overall Statistics
     ##                                           
-    ##                Accuracy : 0.8476          
-    ##                  95% CI : (0.8415, 0.8537)
+    ##                Accuracy : 0.8497          
+    ##                  95% CI : (0.8436, 0.8557)
     ##     No Information Rate : 0.4569          
     ##     P-Value [Acc > NIR] : < 2.2e-16       
     ##                                           
-    ##                   Kappa : 0.7589          
+    ##                   Kappa : 0.7623          
     ##  Mcnemar's Test P-Value : < 2.2e-16       
     ## 
     ## Statistics by Class:
     ## 
     ##                      Class: Adoption Class: Euthanasia
-    ## Sensitivity                   0.9681           0.42444
-    ## Specificity                   0.7975           0.99923
-    ## Pos Pred Value                0.8009           0.95025
-    ## Neg Pred Value                0.9674           0.98055
-    ## Precision                     0.8009           0.95025
-    ## Recall                        0.9681           0.42444
-    ## F1                            0.8766           0.58679
+    ## Sensitivity                   0.9676           0.46222
+    ## Specificity                   0.7982           0.99962
+    ## Pos Pred Value                0.8013           0.97653
+    ## Neg Pred Value                0.9670           0.98181
+    ## Precision                     0.8013           0.97653
+    ## Recall                        0.9676           0.46222
+    ## F1                            0.8767           0.62745
     ## Prevalence                    0.4569           0.03330
-    ## Detection Rate                0.4423           0.01413
-    ## Detection Prevalence          0.5522           0.01487
-    ## Balanced Accuracy             0.8828           0.71184
+    ## Detection Rate                0.4421           0.01539
+    ## Detection Prevalence          0.5517           0.01576
+    ## Balanced Accuracy             0.8829           0.73092
     ##                      Class: Return to Owner Class: Transfer
-    ## Sensitivity                          0.8804          0.6126
-    ## Specificity                          0.9744          0.9699
-    ## Pos Pred Value                       0.9349          0.8482
-    ## Neg Pred Value                       0.9513          0.9013
-    ## Precision                            0.9349          0.8482
-    ## Recall                               0.8804          0.6126
-    ## F1                                   0.9069          0.7114
+    ## Sensitivity                          0.8850          0.6112
+    ## Specificity                          0.9745          0.9715
+    ## Pos Pred Value                       0.9355          0.8548
+    ## Neg Pred Value                       0.9530          0.9011
+    ## Precision                            0.9355          0.8548
+    ## Recall                               0.8850          0.6112
+    ## F1                                   0.9095          0.7128
     ## Prevalence                           0.2946          0.2153
-    ## Detection Rate                       0.2594          0.1319
-    ## Detection Prevalence                 0.2774          0.1555
-    ## Balanced Accuracy                    0.9274          0.7913
+    ## Detection Rate                       0.2607          0.1316
+    ## Detection Prevalence                 0.2787          0.1539
+    ## Balanced Accuracy                    0.9297          0.7914
 
 #### Variable Importance
 
