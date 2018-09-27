@@ -151,9 +151,11 @@ It appears that there are four primary outcomes: Adoption, Transfer, Return to O
 
 ![](Project_Cleaned_files/figure-markdown_github/distributional_exploration1-1.png)
 
-In the initial dataset, almost all the animals have only visited the shelter once. A small portion of the animals have been to the shelter twice and there are almost no animals that have been there three or more times.
+In the initial dataset, almost all the animals have only visited the shelter once. A small portion of the animals have been to the shelter twice and there are almost no animals that have been there three or more times. For the purposes of analysis, I will probably treat this variable as a factor and group everything together greater than or more than three shelter visits.
 
 ![](Project_Cleaned_files/figure-markdown_github/distributional_exploration2-1.png)
+
+Looking at how the outcomes vary by number of visits a dog has made to the shelter, it appears that the transfer outcome is very uncommon for dogs that are not visiting the shelter for the first time. By definition, there are no dogs that revisit the shelter after euthanasia.
 
 ![](Project_Cleaned_files/figure-markdown_github/distributional_exploration3-1.png)
 
@@ -173,7 +175,45 @@ The time spent in shelter for each outcome type shows that the euthanasia and re
 
 ![](Project_Cleaned_files/figure-markdown_github/distributional_exploration7-1.png)
 
-#### EDA Process - Modified Dataset Exploration
+Another thing I was curious about was whether or not there was a seasonal component to each of the shelter outcomes. Looking at day of the week, there is a marked difference between the amount adoptions that occur during the week and during the weekend. Adoptions are much more likely to occur on weekends. On the other hand, transfer outcomes are much less likely to occur on the weekend, while euthanasia shows a minor decrease of occurrence on weekends.
+
+``` r
+data_dog %>%
+  filter((outcome_type == "Adoption" | outcome_type == "Transfer" | outcome_type == "Return to Owner" | outcome_type == "Euthanasia")) %>%
+  ggplot(aes(x = wday(outcome_datetime, label = TRUE, week_start = getOption("lubridate.week.start", 1)))) +
+  geom_bar(stat = "count", fill = "dodgerblue") +
+  facet_wrap(~ outcome_type, nrow = 2) +
+  labs(x = "Lifetime Visits To Shelter Per Animal", y = "Outcome Count", title = "Adoption is much more likely to occur on the weekends than other\ndays of the week") +
+  theme_minimal() +
+  coord_flip()
+```
+
+![](Project_Cleaned_files/figure-markdown_github/unnamed-chunk-2-1.png)
+
+Throughout the year, it appears there is also a seasonal component to adoptions, as the winter months show greater amounts of adopted dogs. The return to owner outcome is similarly more likely in the winter months, though this appears to be less of a pronounced effect. There does not seem to be any discernible pattern with the euthanasia outcome throughout the year, while the transfer outcome shows a slight uptick in November and October.
+
+``` r
+data_dog %>%
+  filter((outcome_type == "Adoption" | outcome_type == "Transfer" | outcome_type == "Return to Owner" | outcome_type == "Euthanasia")) %>%
+  ggplot(aes(x = fct_rev(month(outcome_datetime, label = TRUE)))) +
+  geom_bar(stat = "count", fill = "dodgerblue") +
+  facet_wrap(~ outcome_type, nrow = 2) +
+  labs(x = "Lifetime Visits To Shelter Per Animal", y = "Outcome Count", title = "Adoption more likely to occur during the winter months") +
+  theme_minimal() +
+  coord_flip()
+```
+
+![](Project_Cleaned_files/figure-markdown_github/unnamed-chunk-3-1.png)
+
+##### Dataset Cleaning
+
+Before proceeding further, there are several data cleaning tasks to tackle:
+
+1.  The number of possible dog breeds is quite large from a computational efficiency standpoint, so to reduce this I am going to relabel a dogs breed as it's AKC Breed Group. This will reduce the number possible values from over 1000 to 8 or 9 possible values.
+2.  The number of dog colors is also very large, and as stated above I'm going to simplify this to be represented by a binary variable indicating whether the dog is black or not.
+3.  Many dogs have multiple values listed for color and breed. Color is going to be reduced to the binary of "is black", but for breed I am going create multiple features for breed type. This will be done instead of creating distinct values for each combination of breed types to keep the number of possible values at a manageable scale.
+
+After this cleaning, I now want to examine how the breed groupings and the is black binary are related to the different outcome types.
 
 ------------------------------------------------------------------------
 
@@ -299,47 +339,47 @@ After optimizing our KNN modeling, we developed a few Random Forest models in an
     ## 
     ##                  Reference
     ## Prediction        Adoption Euthanasia Return to Owner Transfer
-    ##   Adoption            5974         96             365     1020
-    ##   Euthanasia             0        208               2        3
-    ##   Return to Owner       82         53            3523      108
-    ##   Transfer             118         93              91     1778
+    ##   Adoption            5972        104             378      976
+    ##   Euthanasia             0        212               3        7
+    ##   Return to Owner       76         58            3501       93
+    ##   Transfer             126         76              99     1833
     ## 
     ## Overall Statistics
     ##                                           
-    ##                Accuracy : 0.8497          
-    ##                  95% CI : (0.8436, 0.8557)
+    ##                Accuracy : 0.8523          
+    ##                  95% CI : (0.8462, 0.8582)
     ##     No Information Rate : 0.4569          
     ##     P-Value [Acc > NIR] : < 2.2e-16       
     ##                                           
-    ##                   Kappa : 0.7623          
+    ##                   Kappa : 0.7667          
     ##  Mcnemar's Test P-Value : < 2.2e-16       
     ## 
     ## Statistics by Class:
     ## 
     ##                      Class: Adoption Class: Euthanasia
-    ## Sensitivity                   0.9676           0.46222
-    ## Specificity                   0.7982           0.99962
-    ## Pos Pred Value                0.8013           0.97653
-    ## Neg Pred Value                0.9670           0.98181
-    ## Precision                     0.8013           0.97653
-    ## Recall                        0.9676           0.46222
-    ## F1                            0.8767           0.62745
+    ## Sensitivity                   0.9673           0.47111
+    ## Specificity                   0.8014           0.99923
+    ## Pos Pred Value                0.8038           0.95495
+    ## Neg Pred Value                0.9668           0.98209
+    ## Precision                     0.8038           0.95495
+    ## Recall                        0.9673           0.47111
+    ## F1                            0.8780           0.63095
     ## Prevalence                    0.4569           0.03330
-    ## Detection Rate                0.4421           0.01539
-    ## Detection Prevalence          0.5517           0.01576
-    ## Balanced Accuracy             0.8829           0.73092
+    ## Detection Rate                0.4419           0.01569
+    ## Detection Prevalence          0.5498           0.01643
+    ## Balanced Accuracy             0.8843           0.73517
     ##                      Class: Return to Owner Class: Transfer
-    ## Sensitivity                          0.8850          0.6112
-    ## Specificity                          0.9745          0.9715
-    ## Pos Pred Value                       0.9355          0.8548
-    ## Neg Pred Value                       0.9530          0.9011
-    ## Precision                            0.9355          0.8548
-    ## Recall                               0.8850          0.6112
-    ## F1                                   0.9095          0.7128
+    ## Sensitivity                          0.8794          0.6301
+    ## Specificity                          0.9762          0.9716
+    ## Pos Pred Value                       0.9391          0.8590
+    ## Neg Pred Value                       0.9510          0.9054
+    ## Precision                            0.9391          0.8590
+    ## Recall                               0.8794          0.6301
+    ## F1                                   0.9083          0.7269
     ## Prevalence                           0.2946          0.2153
-    ## Detection Rate                       0.2607          0.1316
-    ## Detection Prevalence                 0.2787          0.1539
-    ## Balanced Accuracy                    0.9297          0.7914
+    ## Detection Rate                       0.2591          0.1356
+    ## Detection Prevalence                 0.2759          0.1579
+    ## Balanced Accuracy                    0.9278          0.8009
 
 #### Variable Importance
 
