@@ -1,7 +1,7 @@
 Dog Adoption
 ================
 Tyler Mallon
-26 September, 2018
+03 October, 2018
 
 ### Introduction & Background
 
@@ -142,11 +142,6 @@ In the initial dataset, there are 337 unique color combinations of dogs.
 
 #### EDA Process - Initial Variable Relationhips
 
-``` r
-data_dog <- data %>%
-  filter(animal_type == "Dog")
-```
-
 It appears that there are four primary outcomes: Adoption, Transfer, Return to Owner, and Euthanasia. I plan to limit the model predictions to only these four outcomes as there is insufficient data on the other outcomes. I'm curious now to examine the relationship the other variables have with the four largest classes of out comecome type.
 
 ![](Project_Cleaned_files/figure-markdown_github/distributional_exploration1-1.png)
@@ -177,35 +172,13 @@ The time spent in shelter for each outcome type shows that the euthanasia and re
 
 Another thing I was curious about was whether or not there was a seasonal component to each of the shelter outcomes. Looking at day of the week, there is a marked difference between the amount adoptions that occur during the week and during the weekend. Adoptions are much more likely to occur on weekends. On the other hand, transfer outcomes are much less likely to occur on the weekend, while euthanasia shows a minor decrease of occurrence on weekends.
 
-``` r
-data_dog %>%
-  filter((outcome_type == "Adoption" | outcome_type == "Transfer" | outcome_type == "Return to Owner" | outcome_type == "Euthanasia")) %>%
-  ggplot(aes(x = wday(outcome_datetime, label = TRUE, week_start = getOption("lubridate.week.start", 1)))) +
-  geom_bar(stat = "count", fill = "dodgerblue") +
-  facet_wrap(~ outcome_type, nrow = 2) +
-  labs(x = "Lifetime Visits To Shelter Per Animal", y = "Outcome Count", title = "Adoption is much more likely to occur on the weekends than other\ndays of the week") +
-  theme_minimal() +
-  coord_flip()
-```
-
-![](Project_Cleaned_files/figure-markdown_github/unnamed-chunk-2-1.png)
+![](Project_Cleaned_files/figure-markdown_github/dayofweek-1.png)
 
 Throughout the year, it appears there is also a seasonal component to adoptions, as the winter months show greater amounts of adopted dogs. The return to owner outcome is similarly more likely in the winter months, though this appears to be less of a pronounced effect. There does not seem to be any discernible pattern with the euthanasia outcome throughout the year, while the transfer outcome shows a slight uptick in November and October.
 
-``` r
-data_dog %>%
-  filter((outcome_type == "Adoption" | outcome_type == "Transfer" | outcome_type == "Return to Owner" | outcome_type == "Euthanasia")) %>%
-  ggplot(aes(x = fct_rev(month(outcome_datetime, label = TRUE)))) +
-  geom_bar(stat = "count", fill = "dodgerblue") +
-  facet_wrap(~ outcome_type, nrow = 2) +
-  labs(x = "Lifetime Visits To Shelter Per Animal", y = "Outcome Count", title = "Adoption more likely to occur during the winter months") +
-  theme_minimal() +
-  coord_flip()
-```
+![](Project_Cleaned_files/figure-markdown_github/monthofyear-1.png)
 
-![](Project_Cleaned_files/figure-markdown_github/unnamed-chunk-3-1.png)
-
-##### Dataset Cleaning
+#### Dataset Cleaning
 
 Before proceeding further, there are several data cleaning tasks to tackle:
 
@@ -213,15 +186,21 @@ Before proceeding further, there are several data cleaning tasks to tackle:
 2.  The number of dog colors is also very large, and as stated above I'm going to simplify this to be represented by a binary variable indicating whether the dog is black or not.
 3.  Many dogs have multiple values listed for color and breed. Color is going to be reduced to the binary of "is black", but for breed I am going create multiple features for breed type. This will be done instead of creating distinct values for each combination of breed types to keep the number of possible values at a manageable scale.
 
-After this cleaning, I now want to examine how the breed groupings and the is black binary are related to the different outcome types.
+Looking at the different breed groups and their proportional distribution of outcomes, the non-sporting group of dogs is much less likely to be adopted and instead is more likely to be returned to their owners. The herding group of dogs is the most likely to be adopted with over 50% of outcomes resulting in adoptions. In general there seems to be some minor differences across the other breed groups, but nothing else that dramatically stands out.
+
+![](Project_Cleaned_files/figure-markdown_github/breedgroups-1.png)
+
+When looking at black dogs versus all others, there does not seem to be any significant difference in the proportion of dogs that are adopted. I included this variable due to the prominence of the theory that black dogs are less likely to be adopted than other colors of dogs, but this theory is clearly unfounded in this dataset. In fact, black dogs have a slightly higher proportion of adoption outcomes than non-black dogs in this dataset.
+
+![](Project_Cleaned_files/figure-markdown_github/isblack-1.png)
 
 ------------------------------------------------------------------------
 
 ### Model Choice/Description
 
-The statistical learning methods that we used to develop our models were K Nearest Neighbors (KNN) and Random Forests. The first models we ran were KNN models. We chose to use KNN because this method is nonparametric and allows us to develop a model without yet knowing the importance of specific variables or having to choose variables accordingly. Another reason we chose to use the KNN method is that it's easy to make modifications to this type of model, allowing us to produce a large number of potential models. This ease of modification comes from the fact that the only tuning parameter we need to just is the number of K.
+The statistical learning methods that I used models were K Nearest Neighbors (KNN) and Random Forests. The first model I tried was a KNN model. I chose to use KNN because this method is nonparametric and is fairly simple in terms of hyper-parameter specification. Since the only tuning parameter of the model is the size of 'k', I figured this would serve as a good baseline to start with.
 
-After developing the KNN models, we moved on to creating models using the Random Forest method. We chose this method because of its classifying power. Typical decision trees often have a high variance and thus can struggle when there are large differences in the dataset from which the model was initially trained on. Random Forests, however, circumvent this problem by using an ensemble approach of creating many trees and using the aggregate results of each tree as a combined output. Another relevant factor for choosing this method was its ability to provide in-model calculated variable-importance measures, allowing us to see which variables have the greatest impact on the outcomes rather than making educated guesses. The random forest method we have utilized returns the variable importance, scaled from 0 to 100 for each class of variable. In this model, the predictors that ended up having the most importance were the following: how long the dog had been at the shelter (this had an importance of 100), the age of the dog, the intake type of the dog (whether the dog was a stray, an owner surrender, a public assist, etc.), and the dog's sex upon outcome. Another slightly less important variable was the reproductive status of the dog upon intake (whether the dog had been "fixed" or not). The variables with the least amount of importance were breed type and our modified color variable identifying whether dog was black or not.
+After creating a number of KNN models and grid-searching for an optimal value of k, I moved on to creating models using the Random Forest method. I chose this method because it is generally a well performing multi-class classifier and has a great reduction in variance compared to singular decision tree algorithms. Random Forests circumvent the high variance nature of decision trees by using an ensemble approach of creating many trees and using the aggregate results of each tree as a combined output. Another relevant factor for choosing this method was its ability to provide in-model calculated variable-importance measures, which allowed me to see which variables have the greatest impact on the outcomes. The random forest method I have utilized returns the variable importance, scaled from 0 to 100.
 
 ------------------------------------------------------------------------
 
@@ -229,7 +208,7 @@ After developing the KNN models, we moved on to creating models using the Random
 
 #### KNN
 
-The KNN model we produced performed relatively well, with the highest accuracy percentage coming in at 69.76% using a K value of 11. For our K values, we used only odd values up to 17. From outside research, using only odd values seemed to be an industry best practice when using KNN so that each point would have majority category rather than being evenly split between two categories. In addition to the accuracy measurement, the KNN model provides another variable, Kappa, which is a metric that compares observed accuracy with expected accuracy. A Kappa of &gt;.75 is considered to be excellent, while a Kappa between .4 and .75 is considered fair to good. The KNN model with a K value of 11 also had one of the highest Kappa values of .52, a fair to good value, and was only separated by .001 from the highest Kappa value.
+The KNN model I produced had a middle of the road performance, with the highest accuracy percentage coming in at 69.76% using a K value of 11. For our K values, I used only odd values from 1 to 17. It is my understanding that using odd values seemed to be an industry best practice when using KNN so that each point would have majority category rather than being evenly split between two categories. In addition to the accuracy measurement, I am also interested in looking at Cohen's Kappa coefficient, which is a metric that compares observed accuracy with expected accuracy. The general rule of thumb is that a Kappa value of &gt;.75 is considered to be excellent, while a Kappa between .4 and .75 is considered fair to good. The KNN model with a K value of 11 also had one of the highest Kappa values of .52, a fair to good value, and was only separated by .001 from the highest Kappa value.
 
     ## k-Nearest Neighbors 
     ## 
@@ -260,7 +239,7 @@ The KNN model we produced performed relatively well, with the highest accuracy p
 
 #### Random Forest
 
-After optimizing our KNN modeling, we developed a few Random Forest models in an attempt to improve our test accuracy, along with the model's Kappa value. For our first Random Forest model, we used a range of 2-5 for the number of random variables to select from at each break (mtry). In our first model, we saw that the test accuracy continually increased with each marginal increase in our mtry variable. The highest accuracy achieved in the first model was about 78.3%. Since the accuracy increased with each value of mtry, we decided to create a second model with even higher values of mtry in order to determine the highest practical level of accuracy that could be obtained, and the level of mtry at which the accuracy might begin to increase by only a negligible amount. Thus, our second model had mtry values of 5-8. In this second model we likewise observed that the highest accuracy and Kappa values were developed at an mtry of 8. The results indicated a direct relationship between mtry and accuracy. However, when graphing the increase of accuracy compared to the increase in mtry, we noted that the model accuracy began to plateau at an mtry value of 8. Accordingly, we chose to leave our models with a max mtry value of 8. The second Random Forest model achieved an accuracy of 79.5% with a Kappa value 67.4, both of which were much higher than the values of the first Random Forest model and the KNN model.
+After exploring the KNN models, I developed two different Random Forest models. For my first Random Forest model, I used a range of 2-5 for the number of random variables to select from at each break (mtry). In the first model, I saw that the test accuracy continually increased with each marginal increase in the mtry parameter. The highest accuracy achieved in the first model was 78.3%. Since the accuracy increased with each value of mtry, I decided to create a second model with larger values of mtry in order to see if that would increase the accuracy. Thus, my second model had mtry values of 5-8. In this second model I observed that the highest accuracy and Kappa values were at an mtry of 8. The results indicated a positive relationship between mtry and accuracy. However, when graphing the increase of accuracy compared to the increase in mtry, I could see that the model accuracy was increasing at a decreasing rate and began to plateau at an mtry value of 8. Accordingly, I chose to leave the mtry parameter at an mtry value of 8. The second Random Forest model achieved an accuracy of 79.5% with a Kappa value 67.4, both of which were much higher than the values of the first Random Forest model and the KNN model.
 
     ## Random Forest 
     ## 
@@ -335,55 +314,59 @@ After optimizing our KNN modeling, we developed a few Random Forest models in an
 
 ![](Project_Cleaned_files/figure-markdown_github/rf2Kappa-1.png)
 
+#### Sensitivity/Specificity
+
+After producing the second Random Forest model, I decided to look at the performance metrics by class. In the case of predicting adoptions, the sensitivity value relays the accuracy percentage of those dogs predicted to be adoptions that were truly adopted. Specificity, on the other hand, relays the percentage of dogs predicted to not be euthanized that were actually not euthanized. When taking these considerations into account, we see that our last model is particularly good at predicting when an animal won’t be euthanized (99% Specificity), or when an animal will be adopted (93% Sensitivity).
+
     ## Confusion Matrix and Statistics
     ## 
     ##                  Reference
     ## Prediction        Adoption Euthanasia Return to Owner Transfer
-    ##   Adoption            5972        104             378      976
-    ##   Euthanasia             0        212               3        7
-    ##   Return to Owner       76         58            3501       93
-    ##   Transfer             126         76              99     1833
+    ##   Adoption            5970         93             377     1009
+    ##   Euthanasia             0        220               3        6
+    ##   Return to Owner       66         47            3516      105
+    ##   Transfer             138         90              85     1789
     ## 
     ## Overall Statistics
     ##                                           
-    ##                Accuracy : 0.8523          
-    ##                  95% CI : (0.8462, 0.8582)
+    ##                Accuracy : 0.8506          
+    ##                  95% CI : (0.8445, 0.8566)
     ##     No Information Rate : 0.4569          
     ##     P-Value [Acc > NIR] : < 2.2e-16       
     ##                                           
-    ##                   Kappa : 0.7667          
+    ##                   Kappa : 0.7639          
     ##  Mcnemar's Test P-Value : < 2.2e-16       
     ## 
     ## Statistics by Class:
     ## 
     ##                      Class: Adoption Class: Euthanasia
-    ## Sensitivity                   0.9673           0.47111
-    ## Specificity                   0.8014           0.99923
-    ## Pos Pred Value                0.8038           0.95495
-    ## Neg Pred Value                0.9668           0.98209
-    ## Precision                     0.8038           0.95495
-    ## Recall                        0.9673           0.47111
-    ## F1                            0.8780           0.63095
+    ## Sensitivity                   0.9670           0.48889
+    ## Specificity                   0.7985           0.99931
+    ## Pos Pred Value                0.8014           0.96070
+    ## Neg Pred Value                0.9664           0.98269
+    ## Precision                     0.8014           0.96070
+    ## Recall                        0.9670           0.48889
+    ## F1                            0.8765           0.64801
     ## Prevalence                    0.4569           0.03330
-    ## Detection Rate                0.4419           0.01569
-    ## Detection Prevalence          0.5498           0.01643
-    ## Balanced Accuracy             0.8843           0.73517
+    ## Detection Rate                0.4418           0.01628
+    ## Detection Prevalence          0.5512           0.01695
+    ## Balanced Accuracy             0.8827           0.74410
     ##                      Class: Return to Owner Class: Transfer
-    ## Sensitivity                          0.8794          0.6301
-    ## Specificity                          0.9762          0.9716
-    ## Pos Pred Value                       0.9391          0.8590
-    ## Neg Pred Value                       0.9510          0.9054
-    ## Precision                            0.9391          0.8590
-    ## Recall                               0.8794          0.6301
-    ## F1                                   0.9083          0.7269
+    ## Sensitivity                          0.8832          0.6150
+    ## Specificity                          0.9771          0.9705
+    ## Pos Pred Value                       0.9416          0.8511
+    ## Neg Pred Value                       0.9525          0.9019
+    ## Precision                            0.9416          0.8511
+    ## Recall                               0.8832          0.6150
+    ## F1                                   0.9115          0.7140
     ## Prevalence                           0.2946          0.2153
-    ## Detection Rate                       0.2591          0.1356
-    ## Detection Prevalence                 0.2759          0.1579
-    ## Balanced Accuracy                    0.9278          0.8009
+    ## Detection Rate                       0.2602          0.1324
+    ## Detection Prevalence                 0.2763          0.1555
+    ## Balanced Accuracy                    0.9302          0.7927
 
 #### Variable Importance
 
-After producing the second Random Forest model, we decided to look at the statistics by class. We discovered that the most important variables in determining the outcome for dogs in the shelter are: how long the dog has been in the shelter (in days), how old the dog is, and the outcome hour. In addition to observing what the most significant variables were, we were able to look at the sensitivity and specificity of our models in predicting the outcome types. In the case of predicting adoptions, the sensitivity value relays the accuracy percentage of those dogs predicted to be adoptions that were truly adopted. Specificity, on the other hand, relays the percentage of dogs predicted to not be euthanized that were actually not euthanized. When taking these considerations into account, we see that our last model is particularly good at predicting when an animal won’t be euthanized (99% Specificity), or when an animal will be adopted (93% Sensitivity).
+In the final Random Forest model, the predictors that ended up having the most importance were the following: how long the dog had been at the shelter (this had an importance of 100), the age of the dog, the intake type of the dog (whether the dog was a stray, an owner surrender, a public assist, etc.), and the dog's sex upon outcome. Another slightly less important variable was the reproductive status of the dog upon intake (whether the dog had been "fixed" or not). Variables with suprisingly lower importance (contrary to popular conjecture) were breed group and the is-black binary variable identifying whether dog was black or not.
 
     ## ranger variable importance
     ## 
@@ -415,6 +398,6 @@ After producing the second Random Forest model, we decided to look at the statis
 
 ### Conclusion
 
-After developing two primary types of models, and several modifications of both, we were able to produce a best-fit model that correctly predicted the outcome of a dog in the AAC shelter with about 80% accuracy, though not all outcomes were predicted equally. If the shelter looks to predict whether a dog will be adopted or not, we can predict with great accuracy whether it will be adopted. Additionally, if the shelter is contemplating euthanasia, our best-fit model is almost perfect at predicting when animals should not be euthanized. This is very applicable to our business question in that we can determine which dogs should be kept on hand for homes to adopt. This insight could also serve to prevent the unnecessary deaths of animals that won't need to be euthanized.
+After developing three sets of models, and several modifications of both, I was able to produce a best-fit model that correctly predicted the outcome of a dog in the AAC shelter with about 80% accuracy, though not all outcomes were predicted equally. If the shelter looks to predict whether a dog will be adopted or not, I can predict with great accuracy whether it will be adopted. Additionally, if the shelter is contemplating euthanasia, my best-fit model is almost perfect at predicting when animals should not be euthanized. I believe this to be a very applicable result for stack-ranking which dogs should be kept on hand for homes to adopt. This insight could also serve to prevent the unnecessary deaths of animals that don't need to be euthanized.
 
-A few modifications could be made to improve the performance of our modeling in the future. Though we chose to simplify both the color and breed variables in order to alleviate computational difficulty, our results seem to indicate that we may have been better served by allowing the original specificity to better determine any breeds or colors more or less likely to be adopted. In addition to this modification, we recognize that it may be impractical to utilize the variable of how long the dog has been in the shelter in order to predict the dog's future outcome on the day of its intake. This is because the number of days a dog will be in the shelter is unknown on the day of its intake. Creating a forecasting model that can predict how long a dog will be in the shelter would be helpful to supply a prediction for our model to use as the number of days that a dog will ultimately be in the shelter. Lastly, we only tried two different methods of classification. There are certainly other methods of classification that could perform well on a data set like this, for example, Linear or Quadratic Discriminant Analysis.
+A few modifications could be made to improve the performance of the modeling in the future. Though I chose to simplify both the color and breed variables in order to alleviate computational complexity, my results seem to indicate that I may have been better served by having greater granularity for both breed and color. In addition to this modification, I recognize that it may be impractical to utilize the variable of how long the dog has been in the shelter in order to predict the dog's future outcome on the day of its intake. This is because the number of days a dog will be in the shelter is unknown on the day of its intake. Creating a secondary forecasting model that can accurately predict how long a dog will be in the shelter would be necessary to utilize this work for future prediction on incoming animaals. Lastly, I have only tried two different methods of classification. There are certainly other methods of classification that could perform well on a data set like this. I hope to continue to improve this body of work in the future.
